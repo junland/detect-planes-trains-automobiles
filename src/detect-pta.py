@@ -170,8 +170,11 @@ def main():
                 client.publish(topic, payload_msg)
 
             client.publish(topic_total_count, f"{total_count}")
+            print(f"Publishing {total_count} to topic {topic_total_count}")
             client.publish(topic_inference_time, f"{round(inference_time, 2)}")
+            print(f"Publishing {round(inference_time, 2)} to topic {topic_inference_time}")
             client.publish(topic_frames_processed, f"{frames_processed}")
+            print(f"Publishing {frames_processed} to topic {topic_frames_processed}")
 
             print(f"Sent detection counts — cars: {num_cars}, trucks: {num_trucks}, planes: {num_planes}, trains: {num_trains}, persons: {num_person}")
             print(f"Sent detection confidences — cars: {avg_conf_cars:.4f}, trucks: {avg_conf_trucks:.4f}, planes: {avg_conf_planes:.4f}, trains: {avg_conf_trains:.4f}, persons: {avg_conf_person:.4f}")
