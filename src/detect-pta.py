@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 import cv2
 import yt_dlp
@@ -57,6 +58,18 @@ def main():
     topic_trains_count = "train/detection/count"
     topic_trucks_count = "truck/detection/count"
 
+    # Define MQTT topics for confidence scores
+    topic_cars_confidence = "car/detection/confidence"
+    topic_person_confidence = "person/detection/confidence"
+    topic_planes_confidence = "plane/detection/confidence"
+    topic_trains_confidence = "train/detection/confidence"
+    topic_trucks_confidence = "truck/detection/confidence"
+
+    # Define MQTT topics for additional metrics
+    topic_total_count = "detection/total/count"
+    topic_inference_time = "detection/inference_time"
+    topic_frames_processed = "detection/frames_processed"
+
     # Print information about the device being used for inference
     print(f"Using device: {device} for inference.")
 
@@ -89,6 +102,8 @@ def main():
             print("Error opening video stream.")
             return None, 1
         
+        frames_processed = 0
+
         while True:
             ret, frame = cap.read()
 
@@ -98,17 +113,35 @@ def main():
                 print("Failed to read frame from stream.")
                 break
             
+            start_time = time.time()
             results = model(frame, verbose=False, device=device)
+            inference_time = (time.time() - start_time) * 1000  # Convert to milliseconds
             boxes = results[0].boxes
 
             # COCO class IDs: 0=person, 2=car, 4=airplane, 6=train, 7=truck
             cls = boxes.cls.tolist() if boxes is not None else []
+            conf = boxes.conf.tolist() if boxes is not None else []
             
             num_cars   = cls.count(2)
             num_person = cls.count(0)
             num_planes = cls.count(4)
             num_trains = cls.count(6)
             num_trucks = cls.count(7)
+
+            # Calculate average confidence per class
+            class_ids = {2: [], 0: [], 4: [], 6: [], 7: []}
+            for c, cf in zip(cls, conf):
+                if c in class_ids:
+                    class_ids[c].append(cf)
+
+            avg_conf_cars   = sum(class_ids[2]) / len(class_ids[2]) if class_ids[2] else 0.0
+            avg_conf_person = sum(class_ids[0]) / len(class_ids[0]) if class_ids[0] else 0.0
+            avg_conf_planes = sum(class_ids[4]) / len(class_ids[4]) if class_ids[4] else 0.0
+            avg_conf_trains = sum(class_ids[6]) / len(class_ids[6]) if class_ids[6] else 0.0
+            avg_conf_trucks = sum(class_ids[7]) / len(class_ids[7]) if class_ids[7] else 0.0
+
+            total_count = num_cars + num_person + num_planes + num_trains + num_trucks
+            frames_processed += 1
 
             counts = {
                 topic_cars_count:   num_cars,
@@ -118,12 +151,31 @@ def main():
                 topic_trucks_count: num_trucks, 
             }
 
+            confidences = {
+                topic_cars_confidence:   round(avg_conf_cars, 4),
+                topic_person_confidence: round(avg_conf_person, 4),
+                topic_planes_confidence: round(avg_conf_planes, 4),
+                topic_trains_confidence: round(avg_conf_trains, 4),
+                topic_trucks_confidence: round(avg_conf_trucks, 4),
+            }
+
             for topic, count in counts.items():
                 print(f"Publishing {count} to topic {topic}")
                 payload_msg = f"{count}"
                 client.publish(topic, payload_msg)
 
+            for topic, confidence in confidences.items():
+                print(f"Publishing {confidence} to topic {topic}")
+                payload_msg = f"{confidence}"
+                client.publish(topic, payload_msg)
+
+            client.publish(topic_total_count, f"{total_count}")
+            client.publish(topic_inference_time, f"{round(inference_time, 2)}")
+            client.publish(topic_frames_processed, f"{frames_processed}")
+
             print(f"Sent detection counts — cars: {num_cars}, trucks: {num_trucks}, planes: {num_planes}, trains: {num_trains}, persons: {num_person}")
+            print(f"Sent detection confidences — cars: {avg_conf_cars:.4f}, trucks: {avg_conf_trucks:.4f}, planes: {avg_conf_planes:.4f}, trains: {avg_conf_trains:.4f}, persons: {avg_conf_person:.4f}")
+            print(f"Sent additional metrics — total: {total_count}, inference_time: {inference_time:.2f}ms, frames_processed: {frames_processed}")
         
         return 0, None
     finally:
