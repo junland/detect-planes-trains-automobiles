@@ -9,7 +9,7 @@ from ultralytics import YOLO
 
 def get_video_url(stream_url):
     ydl_opts = {
-        'format': 'best',
+        'format': 'best[height<=1440][ext=mp4]/best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
     }
@@ -18,12 +18,11 @@ def get_video_url(stream_url):
         try:
             print(f"Extracting stream URL from: {stream_url}")
             info_dict = ydl.extract_info(stream_url, download=False)
-            # Find the best that is has a max resolution of 1440p and is in mp4 format
-            best_format = next((f for f in info_dict['formats'] if 'url' in f and f.get('ext') == 'mp4' and f.get('height', 0) <= 1440), None)
-            if best_format is None:
-                print("No suitable mp4 format with URL found in video info.")
+            url = info_dict.get('url')
+            if url is None:
+                print("No suitable format with URL found in video info.")
                 return None
-            return best_format['url']
+            return url
         except Exception as e:
             print(f"Error extracting stream URL: {e}")
             return None
