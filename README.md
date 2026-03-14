@@ -25,6 +25,20 @@ Python dependencies are declared in `pyproject.toml` and include `opencv-python`
 
 ## Installation
 
+### Using uv
+
+```bash
+uv sync
+```
+
+To run the application directly without installing:
+
+```bash
+uv run detect-pta
+```
+
+### Using pip
+
 ```bash
 pip install .
 ```
@@ -38,7 +52,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python src/detect-pta.py [OPTIONS]
+detect-pta [OPTIONS]
 ```
 
 ### Options
@@ -56,7 +70,7 @@ All options can be set via environment variables or command-line flags. Command-
 
 ```bash
 # Using flags
-python src/detect-pta.py \
+detect-pta \
   --stream_url "https://www.youtube.com/watch?v=<live-stream-id>" \
   --mqtt_host 192.168.1.10 \
   --mqtt_port 1883 \
@@ -66,7 +80,7 @@ python src/detect-pta.py \
 STREAM_URL="https://www.youtube.com/watch?v=<live-stream-id>" \
 MQTT_HOST=192.168.1.10 \
 DETECTION_MODEL=yolo11n.pt \
-python src/detect-pta.py
+detect-pta
 ```
 
 ## MQTT Topics
