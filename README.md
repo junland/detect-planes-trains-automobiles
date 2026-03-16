@@ -17,7 +17,7 @@ A Python application that watches a YouTube live stream (or any [yt-dlp](https:/
 
 ## Requirements
 
-- Python >= 3.14
+- Python >= 3.12
 - An MQTT broker (e.g. [Mosquitto](https://mosquitto.org/))
 - A YOLO model file (e.g. `yolo11n.pt` downloaded from Ultralytics)
 
