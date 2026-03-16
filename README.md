@@ -1,6 +1,6 @@
 # detect-planes-trains-automobiles
 
-A Python application that watches a YouTube live stream (or any yt-dlp-compatible stream URL) and uses [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) to detect planes, trains, automobiles, trucks, and persons in each frame. Detection counts, average confidence scores, and additional metrics are published to an MQTT broker in real time.
+A Python application that watches a YouTube live stream (or any [yt-dlp](https://github.com/yt-dlp/yt-dlp)-compatible stream URL) and uses [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) to detect planes, trains, automobiles, trucks, and persons in each frame. Detection counts, average confidence scores, and additional metrics are published to an MQTT broker in real time.
 
 ## Features
 
