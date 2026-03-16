@@ -28,6 +28,31 @@ def get_video_url(stream_url):
             print(f"Error extracting stream URL: {e}")
             return None
         
+def publish_topics(client, counts, confidences, total_count, inference_time, frames_processed):
+    """Publish detection results to MQTT topics."""
+    for topic, count in counts.items():
+        print(f"Publishing {count} to topic {topic}")
+        payload_msg = f"{count}"
+        client.publish(topic, payload_msg)
+
+    for topic, confidence in confidences.items():
+        print(f"Publishing {confidence} to topic {topic}")
+        payload_msg = f"{confidence}"
+        client.publish(topic, payload_msg)
+
+    topic_total_count = "pta/detection/total/count"
+    topic_inference_time = "pta/detection/inference_time"
+    topic_frames_processed = "pta/detection/frames_processed"
+
+    print(f"Publishing {total_count} to topic {topic_total_count}")
+    client.publish(topic_total_count, f"{total_count}")
+    
+    print(f"Publishing {round(inference_time, 2)} to topic {topic_inference_time}")
+    client.publish(topic_inference_time, f"{round(inference_time, 2)}")
+    
+    print(f"Publishing {frames_processed} to topic {topic_frames_processed}")
+    client.publish(topic_frames_processed, f"{frames_processed}")
+
 def main():
     # Define environment variable support for argparse
     default_stream_url = os.getenv("STREAM_URL", "https://www.youtube.com/watch?v=6dp-bvQ7RWo")
@@ -64,11 +89,6 @@ def main():
     topic_planes_confidence = "pta/plane/detection/confidence"
     topic_trains_confidence = "pta/train/detection/confidence"
     topic_trucks_confidence = "pta/truck/detection/confidence"
-
-    # Define MQTT topics for additional metrics
-    topic_total_count = "pta/detection/total/count"
-    topic_inference_time = "pta/detection/inference_time"
-    topic_frames_processed = "pta/detection/frames_processed"
 
     # Print information about the device being used for inference
     print(f"Using device: {device} for inference.")
@@ -159,24 +179,7 @@ def main():
                 topic_trucks_confidence: round(avg_conf_trucks, 4),
             }
 
-            for topic, count in counts.items():
-                print(f"Publishing {count} to topic {topic}")
-                payload_msg = f"{count}"
-                client.publish(topic, payload_msg)
-
-            for topic, confidence in confidences.items():
-                print(f"Publishing {confidence} to topic {topic}")
-                payload_msg = f"{confidence}"
-                client.publish(topic, payload_msg)
-
-            client.publish(topic_total_count, f"{total_count}")
-            print(f"Publishing {total_count} to topic {topic_total_count}")
-            
-            client.publish(topic_inference_time, f"{round(inference_time, 2)}")
-            print(f"Publishing {round(inference_time, 2)} to topic {topic_inference_time}")
-            
-            client.publish(topic_frames_processed, f"{frames_processed}")
-            print(f"Publishing {frames_processed} to topic {topic_frames_processed}")
+            publish_topics(client, counts, confidences, total_count, inference_time, frames_processed)
 
             print(f"Sent detection counts — cars: {num_cars}, trucks: {num_trucks}, planes: {num_planes}, trains: {num_trains}, persons: {num_person}")
             print(f"Sent detection confidences — cars: {avg_conf_cars:.4f}, trucks: {avg_conf_trucks:.4f}, planes: {avg_conf_planes:.4f}, trains: {avg_conf_trains:.4f}, persons: {avg_conf_person:.4f}")
