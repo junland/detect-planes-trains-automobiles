@@ -68,6 +68,11 @@ detect-pta = "src.detect_pta:main"
 Homepage = "https://github.com/junland/detect-planes-trains-automobiles"
 Repository = "https://github.com/junland/detect-planes-trains-automobiles"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=9.0.2",
+]
+
 [tool.setuptools]
 packages = ["src"]
 
